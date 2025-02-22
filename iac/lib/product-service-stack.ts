@@ -2,7 +2,6 @@ import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import { Construct } from "constructs";
-import { products as mockProducts } from "./mocks/products";
 
 export class ProductServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -13,22 +12,8 @@ export class ProductServiceStack extends cdk.Stack {
       "GetProductsListLambda",
       {
         runtime: lambda.Runtime.NODEJS_20_X,
-        code: lambda.Code.fromInline(`
-        exports.handler = async (event) => {
-          const products = ${JSON.stringify(mockProducts)};
-          return {
-            statusCode: 200,
-            headers: {
-              "Content-Type": "application/json",
-              "Access-Control-Allow-Headers" : "Content-Type",
-              "Access-Control-Allow-Origin": "https://d2qorf0xmzna5y.cloudfront.net",
-              "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
-            },
-            body: JSON.stringify(products)
-          };
-        };
-      `),
-        handler: "index.handler",
+        code: lambda.Code.fromAsset("../backend/dist"),
+        handler: "get-products-list.handler",
       }
     );
 
@@ -37,38 +22,8 @@ export class ProductServiceStack extends cdk.Stack {
       "GetProductsByIdLambda",
       {
         runtime: lambda.Runtime.NODEJS_20_X,
-        code: lambda.Code.fromInline(`
-        exports.handler = async (event) => {
-          const products = ${JSON.stringify(mockProducts)};
-          const productId = event.pathParameters.productId;
-          const product = products.find(p => p.id === productId);
-
-          if (!product) {
-            return {
-              statusCode: 404,
-              headers: {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Headers" : "Content-Type",
-                "Access-Control-Allow-Origin": "https://d2qorf0xmzna5y.cloudfront.net",
-                "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
-              },
-              body: JSON.stringify({ message: "Product not found" }),
-            };
-          }
-
-          return {
-            statusCode: 200,
-            headers: {
-              "Content-Type": "application/json",
-              "Access-Control-Allow-Headers" : "Content-Type",
-              "Access-Control-Allow-Origin": "https://d2qorf0xmzna5y.cloudfront.net",
-              "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
-            },
-            body: JSON.stringify(product),
-          };
-        };
-      `),
-        handler: "index.handler",
+        code: lambda.Code.fromAsset("../backend/dist"),
+        handler: "get-products-by-id.handler",
       }
     );
 
