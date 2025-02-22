@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import * as cdk from "aws-cdk-lib";
-import { RsNodeAwsShop } from "../lib/iac-stack";
+import { RsNodeAwsShop } from "../lib/fe-iac-stack";
 
 const app = new cdk.App();
 new RsNodeAwsShop(app, "RsNodeAwsShopStack", {
