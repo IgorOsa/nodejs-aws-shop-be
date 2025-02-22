@@ -1,5 +1,12 @@
 import { products as mockProducts } from "./mocks/products";
 
+const headers = {
+  "Content-Type": "application/json",
+  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Origin": "https://d2qorf0xmzna5y.cloudfront.net",
+  "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
+};
+
 export const handler = async (event: any) => {
   const products = mockProducts;
   const productId = event.pathParameters.productId;
@@ -8,24 +15,14 @@ export const handler = async (event: any) => {
   if (!product) {
     return {
       statusCode: 404,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Headers": "Content-Type",
-        "Access-Control-Allow-Origin": "https://d2qorf0xmzna5y.cloudfront.net",
-        "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
-      },
+      headers,
       body: JSON.stringify({ message: "Product not found" }),
     };
   }
 
   return {
     statusCode: 200,
-    headers: {
-      "Content-Type": "application/json",
-      "Access-Control-Allow-Headers": "Content-Type",
-      "Access-Control-Allow-Origin": "https://d2qorf0xmzna5y.cloudfront.net",
-      "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
-    },
+    headers,
     body: JSON.stringify(product),
   };
 };
