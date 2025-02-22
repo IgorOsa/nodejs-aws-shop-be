@@ -24,7 +24,7 @@ import { products } from "./mocks/products";
  *                 id:
  *                   type: string
  *                   description: The product ID.
- *                   example: "1"
+ *                   example: "7567ec4b-b10c-48c5-9345-fc73c48a80aa"
  *                 name:
  *                   type: string
  *                   description: The product name.
