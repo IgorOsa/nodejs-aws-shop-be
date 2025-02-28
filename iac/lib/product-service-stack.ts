@@ -1,11 +1,24 @@
 import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
+import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import { Construct } from "constructs";
 
 export class ProductServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+
+    const productsTable = new dynamodb.Table(this, "ProductsTable", {
+      partitionKey: { name: "id", type: dynamodb.AttributeType.STRING },
+      tableName: "products",
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
+    const stocksTable = new dynamodb.Table(this, "StocksTable", {
+      partitionKey: { name: "product_id", type: dynamodb.AttributeType.STRING },
+      tableName: "stocks",
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
 
     const getProductsListLambda = new lambda.Function(
       this,
@@ -14,6 +27,10 @@ export class ProductServiceStack extends cdk.Stack {
         runtime: lambda.Runtime.NODEJS_20_X,
         code: lambda.Code.fromAsset("../backend/dist"),
         handler: "get-products-list.handler",
+        environment: {
+          PRODUCTS_TABLE_NAME: productsTable.tableName,
+          STOCKS_TABLE_NAME: stocksTable.tableName,
+        },
       }
     );
 
@@ -24,8 +41,22 @@ export class ProductServiceStack extends cdk.Stack {
         runtime: lambda.Runtime.NODEJS_20_X,
         code: lambda.Code.fromAsset("../backend/dist"),
         handler: "get-products-by-id.handler",
+        environment: {
+          PRODUCTS_TABLE_NAME: productsTable.tableName,
+          STOCKS_TABLE_NAME: stocksTable.tableName,
+        },
       }
     );
+
+    productsTable.grantReadData(getProductsListLambda);
+    productsTable.grantReadData(getProductsByIdLambda);
+    stocksTable.grantReadData(getProductsListLambda);
+    stocksTable.grantReadData(getProductsByIdLambda);
+
+    productsTable.grant(getProductsListLambda, "dynamodb:Scan");
+    productsTable.grant(getProductsByIdLambda, "dynamodb:GetItem");
+    stocksTable.grant(getProductsListLambda, "dynamodb:Scan");
+    stocksTable.grant(getProductsByIdLambda, "dynamodb:GetItem");
 
     const api = new apigateway.RestApi(this, "ProductServiceApi", {
       restApiName: "Product Service API",
