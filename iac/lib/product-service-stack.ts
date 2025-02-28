@@ -48,6 +48,19 @@ export class ProductServiceStack extends cdk.Stack {
       }
     );
 
+    const createProductLambda = new lambda.Function(
+      this,
+      "CreateProductLambda",
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        code: lambda.Code.fromAsset("../backend/dist"),
+        handler: "create-product.handler",
+        environment: {
+          PRODUCTS_TABLE_NAME: productsTable.tableName,
+        },
+      }
+    );
+
     productsTable.grantReadData(getProductsListLambda);
     productsTable.grantReadData(getProductsByIdLambda);
     stocksTable.grantReadData(getProductsListLambda);
@@ -57,6 +70,8 @@ export class ProductServiceStack extends cdk.Stack {
     productsTable.grant(getProductsByIdLambda, "dynamodb:GetItem");
     stocksTable.grant(getProductsListLambda, "dynamodb:Scan");
     stocksTable.grant(getProductsByIdLambda, "dynamodb:GetItem");
+
+    productsTable.grantReadWriteData(createProductLambda);
 
     const api = new apigateway.RestApi(this, "ProductServiceApi", {
       restApiName: "Product Service API",
@@ -71,6 +86,11 @@ export class ProductServiceStack extends cdk.Stack {
     productsResource.addMethod(
       "GET",
       new apigateway.LambdaIntegration(getProductsListLambda)
+    );
+
+    productsResource.addMethod(
+      "POST",
+      new apigateway.LambdaIntegration(createProductLambda)
     );
 
     const productByIdResource = productsResource.addResource("{productId}");
