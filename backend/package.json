@@ -7,13 +7,15 @@
     "watch": "tsc -w",
     "test": "jest",
     "test:watch": "jest --watch",
-    "generate-openapi": "node scripts/generate-openapi.js"
+    "generate-openapi": "node scripts/generate-openapi.js",
+    "populate-db": "npx ts-node scripts/populateDynamoDB.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.758.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1"
   },
