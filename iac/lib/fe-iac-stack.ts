@@ -34,7 +34,7 @@ export class RsNodeAwsShop extends cdk.Stack {
     );
 
     new s3deploy.BucketDeployment(this, "DeployWebsite", {
-      sources: [s3deploy.Source.asset("../dist")],
+      sources: [s3deploy.Source.asset("../frontend/dist")],
       destinationBucket: websiteBucket,
       distribution,
       distributionPaths: ["/*"],
