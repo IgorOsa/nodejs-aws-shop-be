@@ -5,6 +5,92 @@
     "version": "1.0.0"
   },
   "paths": {
+    "/products": {
+      "post": {
+        "summary": "Create a new product",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "description": "The product title.",
+                    "example": "Product 1"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "The product description.",
+                    "example": "This is a product description."
+                  },
+                  "price": {
+                    "type": "number",
+                    "description": "The product price.",
+                    "example": 100
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Product created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "The product ID.",
+                      "example": "7567ec4b-b10c-48c5-9345-fc73c48a80aa"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Retrieve a list of products",
+        "responses": {
+          "200": {
+            "description": "A list of products",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "description": "The product ID.",
+                        "example": "7567ec4b-b10c-48c5-9345-fc73c48a80aa"
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "The product name.",
+                        "example": "Product 1"
+                      },
+                      "price": {
+                        "type": "number",
+                        "description": "The product price.",
+                        "example": 100
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/products/{productId}": {
       "get": {
         "summary": "Retrieve a product by ID",
@@ -57,43 +143,6 @@
                     "message": {
                       "type": "string",
                       "example": "Product not found"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/products": {
-      "get": {
-        "summary": "Retrieve a list of products",
-        "responses": {
-          "200": {
-            "description": "A list of products",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "string",
-                        "description": "The product ID.",
-                        "example": "7567ec4b-b10c-48c5-9345-fc73c48a80aa"
-                      },
-                      "name": {
-                        "type": "string",
-                        "description": "The product name.",
-                        "example": "Product 1"
-                      },
-                      "price": {
-                        "type": "number",
-                        "description": "The product price.",
-                        "example": 100
-                      }
                     }
                   }
                 }
