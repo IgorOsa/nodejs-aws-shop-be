@@ -1,5 +1,9 @@
+import { DynamoDBClient, GetItemCommand } from "@aws-sdk/client-dynamodb";
 import { httpResponse } from "./common/http-responses";
-import { products } from "./mocks/products";
+
+const dynamoDbClient = new DynamoDBClient({});
+const PRODUCTS_TABLE_NAME = process.env.PRODUCTS_TABLE_NAME;
+const STOCKS_TABLE_NAME = process.env.STOCKS_TABLE_NAME;
 
 /**
  * @swagger
@@ -49,13 +53,36 @@ export const handler = async (event: {
   pathParameters: { productId: string };
 }) => {
   const productId = event.pathParameters.productId;
-  const product = products.find((p) => p.id === productId);
 
-  if (!product) {
-    return httpResponse(404, {
-      message: "Product not found",
-    });
+  try {
+    const productData = await dynamoDbClient.send(
+      new GetItemCommand({
+        TableName: PRODUCTS_TABLE_NAME,
+        Key: { id: { S: productId } },
+      })
+    );
+
+    const stockData = await dynamoDbClient.send(
+      new GetItemCommand({
+        TableName: STOCKS_TABLE_NAME,
+        Key: { product_id: { S: productId } },
+      })
+    );
+
+    if (!productData.Item) {
+      return httpResponse(404, { message: "Product not found" });
+    }
+
+    const product = {
+      id: productData.Item.id.S,
+      title: productData.Item.title.S,
+      description: productData.Item.description.S,
+      price: Number(productData.Item.price.N),
+      count: stockData.Item ? Number(stockData.Item.count.N) : 0,
+    };
+
+    return httpResponse(200, product);
+  } catch (error) {
+    return httpResponse(500, { message: "Internal Server Error", error });
   }
-
-  return httpResponse(200, product);
 };
