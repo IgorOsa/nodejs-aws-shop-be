@@ -57,6 +57,7 @@ export class ProductServiceStack extends cdk.Stack {
         handler: "create-product.handler",
         environment: {
           PRODUCTS_TABLE_NAME: productsTable.tableName,
+          STOCKS_TABLE_NAME: stocksTable.tableName,
         },
       }
     );
@@ -72,6 +73,7 @@ export class ProductServiceStack extends cdk.Stack {
     stocksTable.grant(getProductsByIdLambda, "dynamodb:GetItem");
 
     productsTable.grantReadWriteData(createProductLambda);
+    stocksTable.grantReadWriteData(createProductLambda);
 
     const api = new apigateway.RestApi(this, "ProductServiceApi", {
       restApiName: "Product Service API",

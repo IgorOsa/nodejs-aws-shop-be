@@ -1,9 +1,13 @@
-import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
+import {
+  DynamoDBClient,
+  TransactWriteItemsCommand,
+} from "@aws-sdk/client-dynamodb";
 import { randomUUID } from "crypto";
 import { httpResponse } from "./common/http-responses";
 
 const dynamoDbClient = new DynamoDBClient({});
 const PRODUCTS_TABLE_NAME = process.env.PRODUCTS_TABLE_NAME;
+const STOCKS_TABLE_NAME = process.env.STOCKS_TABLE_NAME;
 
 /**
  * @swagger
@@ -97,20 +101,34 @@ export const handler = async (event: { body: string }) => {
     const id = randomUUID();
 
     const productItem = {
-      id: { S: id },
-      title: { S: title },
-      description: { S: description },
-      price: { N: price.toString() },
+      Put: {
+        TableName: PRODUCTS_TABLE_NAME,
+        Item: {
+          id: { S: id },
+          title: { S: title },
+          description: { S: description },
+          price: { N: price.toString() },
+        },
+      },
+    };
+
+    const stockItem = {
+      Put: {
+        TableName: STOCKS_TABLE_NAME,
+        Item: {
+          product_id: { S: id },
+          count: { N: count.toString() },
+        },
+      },
     };
 
     await dynamoDbClient.send(
-      new PutItemCommand({
-        TableName: PRODUCTS_TABLE_NAME,
-        Item: productItem,
+      new TransactWriteItemsCommand({
+        TransactItems: [productItem, stockItem],
       })
     );
 
-    return httpResponse(201, { id, title, description, price });
+    return httpResponse(201, { id, title, description, price, count });
   } catch (error) {
     console.error("Internal Server Error:", error);
     return httpResponse(500, { message: "Internal Server Error", error });
