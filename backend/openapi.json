@@ -4,6 +4,11 @@
     "title": "Product Service API",
     "version": "1.0.0"
   },
+  "servers": [
+    {
+      "url": "https://3xt0fmn54d.execute-api.eu-central-1.amazonaws.com/dev"
+    }
+  ],
   "paths": {
     "/products": {
       "post": {
