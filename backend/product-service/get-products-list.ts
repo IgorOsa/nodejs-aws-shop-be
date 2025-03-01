@@ -44,13 +44,15 @@ export const handler = async () => {
       new ScanCommand({ TableName: STOCKS_TABLE_NAME })
     );
 
+    if (!productsData.Items || !stocksData.Items) {
+      throw new Error("Failed to fetch data from DynamoDB");
+    }
+
     const products = productsData.Items;
     const stocks = stocksData.Items;
 
-    const joinedData = products?.map((product) => {
-      const stock = stocks?.find(
-        (stock) => stock.product_id.S === product.id.S
-      );
+    const joinedData = products.map((product) => {
+      const stock = stocks.find((stock) => stock.product_id.S === product.id.S);
       return {
         id: product.id.S,
         title: product.title.S,
@@ -61,8 +63,11 @@ export const handler = async () => {
     });
 
     return httpResponse(200, joinedData);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Internal Server Error:", error);
-    return httpResponse(500, { message: "Internal Server Error", error });
+    return httpResponse(500, {
+      message: "Internal Server Error",
+      error: error.message || error,
+    });
   }
 };
