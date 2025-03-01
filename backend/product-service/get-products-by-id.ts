@@ -53,6 +53,7 @@ export const handler = async (event: {
   pathParameters: { productId: string };
 }) => {
   const productId = event.pathParameters.productId;
+  console.log("Incoming request:", event);
 
   try {
     const productData = await dynamoDbClient.send(
@@ -70,6 +71,7 @@ export const handler = async (event: {
     );
 
     if (!productData.Item) {
+      console.warn("Product not found", { productId });
       return httpResponse(404, { message: "Product not found" });
     }
 
@@ -83,6 +85,7 @@ export const handler = async (event: {
 
     return httpResponse(200, product);
   } catch (error) {
+    console.error("Internal Server Error:", error);
     return httpResponse(500, { message: "Internal Server Error", error });
   }
 };

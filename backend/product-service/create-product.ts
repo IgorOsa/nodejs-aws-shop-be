@@ -76,6 +76,8 @@ const validateProductData = (
 
 export const handler = async (event: { body: string }) => {
   try {
+    console.log("Incoming request:", event);
+
     const { title, description, price, count } = JSON.parse(event.body);
 
     const validationErrors = validateProductData(
@@ -85,6 +87,7 @@ export const handler = async (event: { body: string }) => {
       count
     );
     if (validationErrors) {
+      console.error("Validation errors:", validationErrors);
       return httpResponse(400, {
         message: "Validation errors",
         errors: validationErrors,
@@ -109,6 +112,7 @@ export const handler = async (event: { body: string }) => {
 
     return httpResponse(201, { id, title, description, price });
   } catch (error) {
+    console.error("Internal Server Error:", error);
     return httpResponse(500, { message: "Internal Server Error", error });
   }
 };

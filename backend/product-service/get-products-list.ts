@@ -34,6 +34,8 @@ const STOCKS_TABLE_NAME = process.env.STOCKS_TABLE_NAME;
  *                     example: 100
  */
 export const handler = async () => {
+  console.log("Incoming request: Get products list");
+
   try {
     const productsData = await dynamoDbClient.send(
       new ScanCommand({ TableName: PRODUCTS_TABLE_NAME })
@@ -60,6 +62,7 @@ export const handler = async () => {
 
     return httpResponse(200, joinedData);
   } catch (error) {
+    console.error("Internal Server Error:", error);
     return httpResponse(500, { message: "Internal Server Error", error });
   }
 };
