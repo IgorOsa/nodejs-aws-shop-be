@@ -33,6 +33,10 @@ const STOCKS_TABLE_NAME = process.env.STOCKS_TABLE_NAME;
  *                 type: number
  *                 description: The product price.
  *                 example: 100
+ *               count:
+ *                 type: number
+ *                 description: The product count.
+ *                 example: 10
  *     responses:
  *       201:
  *         description: Product created successfully
@@ -45,6 +49,10 @@ const STOCKS_TABLE_NAME = process.env.STOCKS_TABLE_NAME;
  *                   type: string
  *                   description: The product ID.
  *                   example: "7567ec4b-b10c-48c5-9345-fc73c48a80aa"
+ *                 count:
+ *                   type: number
+ *                   description: The product count.
+ *                   example: 10
  */
 
 const validateProductData = (
