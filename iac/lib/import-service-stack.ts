@@ -5,6 +5,7 @@ import * as crypto from "crypto";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import { addCorsOptions } from "./common";
+import * as s3n from "aws-cdk-lib/aws-s3-notifications";
 
 export class ImportServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -32,6 +33,27 @@ export class ImportServiceStack extends cdk.Stack {
 
     bucket.grantPut(importProductsFileLambda);
     bucket.grantRead(importProductsFileLambda);
+
+    const importFileParserLambda = new lambda.Function(
+      this,
+      "ImportFileParserLambda",
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: "index.importFileParser",
+        code: lambda.Code.fromAsset("../backend/dist"),
+        environment: {
+          BUCKET_NAME: bucket.bucketName,
+        },
+      }
+    );
+
+    bucket.grantRead(importFileParserLambda);
+
+    bucket.addEventNotification(
+      s3.EventType.OBJECT_CREATED,
+      new s3n.LambdaDestination(importFileParserLambda),
+      { prefix: "uploaded/" }
+    );
 
     const api = new apigateway.RestApi(this, "ImportServiceApi", {
       restApiName: "Import Service API",

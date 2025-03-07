@@ -2,4 +2,5 @@ export { handler as createProductHandler } from "./product-service/create-produc
 export { handler as getProductsByIdHandler } from "./product-service/get-products-by-id";
 export { handler as getProductsListHandler } from "./product-service/get-products-list";
 
-export { handler as importProductFile } from "./import-service/import-products-file";
+export { importProductFile } from "./import-service/importProductsFile";
+export { importFileParser } from "./import-service/importFileParser";

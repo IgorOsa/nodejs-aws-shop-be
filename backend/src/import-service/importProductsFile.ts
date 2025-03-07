@@ -4,7 +4,7 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 
 const s3Client = new S3Client({ region: process.env.AWS_REGION });
 
-export const handler = async (
+export const importProductFile = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
   const fileName = event.queryStringParameters?.name;
