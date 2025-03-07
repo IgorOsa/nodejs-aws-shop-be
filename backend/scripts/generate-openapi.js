@@ -1,6 +1,9 @@
+require("dotenv").config();
 const swaggerJSDoc = require("swagger-jsdoc");
 const fs = require("fs");
 const path = require("path");
+
+const serverUrl = process.env.SERVER_URL;
 
 const options = {
   definition: {
@@ -9,6 +12,11 @@ const options = {
       title: "Product Service API",
       version: "1.0.0",
     },
+    servers: [
+      {
+        url: serverUrl,
+      },
+    ],
   },
   apis: [path.join(__dirname, "../product-service/*.ts")],
 };
