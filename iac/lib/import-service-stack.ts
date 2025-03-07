@@ -2,6 +2,9 @@ import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as crypto from "crypto";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as apigateway from "aws-cdk-lib/aws-apigateway";
+import { addCorsOptions } from "./common";
 
 export class ImportServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -9,18 +12,49 @@ export class ImportServiceStack extends cdk.Stack {
 
     const hash = crypto.randomBytes(4).toString("hex");
 
-    const bucket = new s3.CfnBucket(this, "ImportServiceBucket", {
+    const bucket = new s3.Bucket(this, "ImportServiceBucket", {
       bucketName: `import-service-bucket-${hash}-dev`,
-      lifecycleConfiguration: {
-        rules: [
-          {
-            id: "CreateUploadedFolder",
-            status: "Enabled",
-            prefix: "uploaded/",
-            expirationInDays: 365,
-          },
-        ],
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    const importProductsFileLambda = new lambda.Function(
+      this,
+      "ImportProductsFileLambda",
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: "index.importProductFile",
+        code: lambda.Code.fromAsset("../backend/dist"),
+        environment: {
+          BUCKET_NAME: bucket.bucketName,
+        },
+      }
+    );
+
+    bucket.grantPut(importProductsFileLambda);
+    bucket.grantRead(importProductsFileLambda);
+
+    const api = new apigateway.RestApi(this, "ImportServiceApi", {
+      restApiName: "Import Service API",
+      description: "This service imports product data",
+      deployOptions: {
+        stageName: "dev",
       },
+    });
+
+    const importResource = api.root.addResource("import");
+    addCorsOptions(importResource);
+    importResource.addMethod(
+      "GET",
+      new apigateway.LambdaIntegration(importProductsFileLambda),
+      {
+        requestParameters: {
+          "method.request.querystring.name": true,
+        },
+      }
+    );
+
+    api.addRequestValidator("queryValidator", {
+      validateRequestParameters: true,
     });
   }
 }
