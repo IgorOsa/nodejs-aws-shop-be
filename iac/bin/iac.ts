@@ -2,6 +2,7 @@
 import * as cdk from "aws-cdk-lib";
 import { RsNodeAwsShop } from "../lib/fe-iac-stack";
 import { ProductServiceStack } from "../lib/product-service-stack";
+import { ImportServiceStack } from "../lib/import-service-stack";
 
 const app = new cdk.App();
 new RsNodeAwsShop(app, "RsNodeAwsShopStack", {
@@ -35,3 +36,5 @@ new ProductServiceStack(app, "ProductServiceStack", {
   // env: { account: '123456789012', region: 'us-east-1' },
   /* For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html */
 });
+
+new ImportServiceStack(app, "ImportServiceStack", {});
