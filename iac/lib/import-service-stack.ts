@@ -3,7 +3,6 @@ import { Construct } from "constructs";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
-import { addCorsOptions } from "./common";
 import * as s3n from "aws-cdk-lib/aws-s3-notifications";
 
 export class ImportServiceStack extends cdk.Stack {
@@ -16,6 +15,21 @@ export class ImportServiceStack extends cdk.Stack {
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
+      cors: [
+        {
+          allowedHeaders: ["*"],
+          allowedMethods: [
+            s3.HttpMethods.GET,
+            s3.HttpMethods.POST,
+            s3.HttpMethods.PUT,
+            s3.HttpMethods.DELETE,
+            s3.HttpMethods.HEAD,
+          ],
+          allowedOrigins: ["*"],
+          exposedHeaders: ["ETag", "x-amz-meta-custom-header"],
+          maxAge: 3000,
+        },
+      ],
     });
 
     const lambdaLayer = new lambda.LayerVersion(this, "ImportServiceLayer", {
@@ -38,8 +52,7 @@ export class ImportServiceStack extends cdk.Stack {
       }
     );
 
-    bucket.grantPut(importProductsFileLambda);
-    bucket.grantRead(importProductsFileLambda);
+    bucket.grantReadWrite(importProductsFileLambda);
 
     const importFileParserLambda = new lambda.Function(
       this,
@@ -55,7 +68,7 @@ export class ImportServiceStack extends cdk.Stack {
       }
     );
 
-    bucket.grantRead(importFileParserLambda);
+    bucket.grantReadWrite(importFileParserLambda);
 
     bucket.addEventNotification(
       s3.EventType.OBJECT_CREATED,
@@ -69,10 +82,13 @@ export class ImportServiceStack extends cdk.Stack {
       deployOptions: {
         stageName: "dev",
       },
+      defaultCorsPreflightOptions: {
+        allowOrigins: apigateway.Cors.ALL_ORIGINS,
+        allowMethods: apigateway.Cors.ALL_METHODS,
+      },
     });
 
     const importResource = api.root.addResource("import");
-    addCorsOptions(importResource);
     importResource.addMethod(
       "GET",
       new apigateway.LambdaIntegration(importProductsFileLambda),
@@ -80,11 +96,10 @@ export class ImportServiceStack extends cdk.Stack {
         requestParameters: {
           "method.request.querystring.name": true,
         },
+        requestValidatorOptions: {
+          validateRequestParameters: true,
+        },
       }
     );
-
-    api.addRequestValidator("queryValidator", {
-      validateRequestParameters: true,
-    });
   }
 }

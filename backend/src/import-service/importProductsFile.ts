@@ -25,7 +25,7 @@ export const importProductFile = async (
   try {
     const command = new PutObjectCommand(params);
     const signedUrl = await getSignedUrl(s3Client, command, {
-      expiresIn: 3600,
+      expiresIn: 60,
     });
 
     return httpResponse(200, signedUrl);

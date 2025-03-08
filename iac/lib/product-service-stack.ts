@@ -21,6 +21,12 @@ export class ProductServiceStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.RETAIN,
     });
 
+    const lambdaLayer = new lambda.LayerVersion(this, "ImportServiceLayer", {
+      code: lambda.Code.fromAsset("../backend/build/layer"),
+      compatibleRuntimes: [lambda.Runtime.NODEJS_20_X],
+      description: "A layer containing node_modules",
+    });
+
     const getProductsListLambda = new lambda.Function(
       this,
       "GetProductsListLambda",
@@ -32,6 +38,7 @@ export class ProductServiceStack extends cdk.Stack {
           PRODUCTS_TABLE_NAME: productsTable.tableName,
           STOCKS_TABLE_NAME: stocksTable.tableName,
         },
+        layers: [lambdaLayer],
       }
     );
 
@@ -46,6 +53,7 @@ export class ProductServiceStack extends cdk.Stack {
           PRODUCTS_TABLE_NAME: productsTable.tableName,
           STOCKS_TABLE_NAME: stocksTable.tableName,
         },
+        layers: [lambdaLayer],
       }
     );
 
@@ -60,6 +68,7 @@ export class ProductServiceStack extends cdk.Stack {
           PRODUCTS_TABLE_NAME: productsTable.tableName,
           STOCKS_TABLE_NAME: stocksTable.tableName,
         },
+        layers: [lambdaLayer],
       }
     );
 
