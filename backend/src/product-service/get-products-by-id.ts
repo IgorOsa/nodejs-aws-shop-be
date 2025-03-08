@@ -82,7 +82,41 @@ export const handler = async (event: {
       price: Number(productData.Item.price.N),
       count: stockData.Item ? Number(stockData.Item.count.N) : 0,
     };
+  console.log("Incoming request:", event);
 
+  try {
+    const productData = await dynamoDbClient.send(
+      new GetItemCommand({
+        TableName: PRODUCTS_TABLE_NAME,
+        Key: { id: { S: productId } },
+      })
+    );
+
+    const stockData = await dynamoDbClient.send(
+      new GetItemCommand({
+        TableName: STOCKS_TABLE_NAME,
+        Key: { product_id: { S: productId } },
+      })
+    );
+
+    if (!productData.Item) {
+      console.warn("Product not found", { productId });
+      return httpResponse(404, { message: "Product not found" });
+    }
+
+    const product = {
+      id: productData.Item.id.S,
+      title: productData.Item.title.S,
+      description: productData.Item.description.S,
+      price: Number(productData.Item.price.N),
+      count: stockData.Item ? Number(stockData.Item.count.N) : 0,
+    };
+
+    return httpResponse(200, product);
+  } catch (error) {
+    console.error("Internal Server Error:", error);
+    return httpResponse(500, { message: "Internal Server Error", error });
+  }
     return httpResponse(200, product);
   } catch (error) {
     console.error("Internal Server Error:", error);
