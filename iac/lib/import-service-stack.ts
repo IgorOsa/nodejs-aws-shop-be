@@ -4,6 +4,7 @@ import * as s3 from "aws-cdk-lib/aws-s3";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as s3n from "aws-cdk-lib/aws-s3-notifications";
+import * as iam from "aws-cdk-lib/aws-iam";
 
 export class ImportServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -69,6 +70,18 @@ export class ImportServiceStack extends cdk.Stack {
     );
 
     bucket.grantReadWrite(importFileParserLambda);
+
+    importFileParserLambda.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject",
+          "s3:CopyObject",
+        ],
+        resources: [bucket.bucketArn + "/*"],
+      })
+    );
 
     bucket.addEventNotification(
       s3.EventType.OBJECT_CREATED,
