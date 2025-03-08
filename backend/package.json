@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "build": "rimraf dist && tsc",
+    "prepare-lambda-layer": "mkdir -p build/layer/nodejs && cp package.json package-lock.json build/layer/nodejs/ && cd build/layer/nodejs && npm ci",
+    "build": "rimraf dist && rimraf build && tsc && npm run prepare-lambda-layer",
     "watch": "tsc -w",
     "test": "jest",
     "test:watch": "jest --watch",
