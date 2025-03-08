@@ -3,6 +3,7 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import { Construct } from "constructs";
+import { addCorsOptions } from "./common";
 
 export class ProductServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -20,17 +21,24 @@ export class ProductServiceStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.RETAIN,
     });
 
+    const lambdaLayer = new lambda.LayerVersion(this, "ImportServiceLayer", {
+      code: lambda.Code.fromAsset("../backend/build/layer"),
+      compatibleRuntimes: [lambda.Runtime.NODEJS_20_X],
+      description: "A layer containing node_modules",
+    });
+
     const getProductsListLambda = new lambda.Function(
       this,
       "GetProductsListLambda",
       {
         runtime: lambda.Runtime.NODEJS_20_X,
         code: lambda.Code.fromAsset("../backend/dist"),
-        handler: "get-products-list.handler",
+        handler: "index.getProductsListHandler",
         environment: {
           PRODUCTS_TABLE_NAME: productsTable.tableName,
           STOCKS_TABLE_NAME: stocksTable.tableName,
         },
+        layers: [lambdaLayer],
       }
     );
 
@@ -40,11 +48,12 @@ export class ProductServiceStack extends cdk.Stack {
       {
         runtime: lambda.Runtime.NODEJS_20_X,
         code: lambda.Code.fromAsset("../backend/dist"),
-        handler: "get-products-by-id.handler",
+        handler: "index.getProductsByIdHandler",
         environment: {
           PRODUCTS_TABLE_NAME: productsTable.tableName,
           STOCKS_TABLE_NAME: stocksTable.tableName,
         },
+        layers: [lambdaLayer],
       }
     );
 
@@ -54,11 +63,12 @@ export class ProductServiceStack extends cdk.Stack {
       {
         runtime: lambda.Runtime.NODEJS_20_X,
         code: lambda.Code.fromAsset("../backend/dist"),
-        handler: "create-product.handler",
+        handler: "index.createProductHandler",
         environment: {
           PRODUCTS_TABLE_NAME: productsTable.tableName,
           STOCKS_TABLE_NAME: stocksTable.tableName,
         },
+        layers: [lambdaLayer],
       }
     );
 
@@ -107,40 +117,4 @@ export class ProductServiceStack extends cdk.Stack {
       description: "The URL of the Product Service API",
     });
   }
-}
-
-function addCorsOptions(apiResource: apigateway.IResource) {
-  apiResource.addMethod(
-    "OPTIONS",
-    new apigateway.MockIntegration({
-      integrationResponses: [
-        {
-          statusCode: "200",
-          responseParameters: {
-            "method.response.header.Access-Control-Allow-Headers":
-              "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
-            "method.response.header.Access-Control-Allow-Origin": "'*'",
-            "method.response.header.Access-Control-Allow-Methods":
-              "'OPTIONS,GET,POST,PUT,DELETE'",
-          },
-        },
-      ],
-      passthroughBehavior: apigateway.PassthroughBehavior.NEVER,
-      requestTemplates: {
-        "application/json": '{"statusCode": 200}',
-      },
-    }),
-    {
-      methodResponses: [
-        {
-          statusCode: "200",
-          responseParameters: {
-            "method.response.header.Access-Control-Allow-Headers": true,
-            "method.response.header.Access-Control-Allow-Origin": true,
-            "method.response.header.Access-Control-Allow-Methods": true,
-          },
-        },
-      ],
-    }
-  );
 }
