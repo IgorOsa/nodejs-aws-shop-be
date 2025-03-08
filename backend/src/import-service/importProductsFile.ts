@@ -1,6 +1,7 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import { httpResponse } from "../common/http-responses";
 
 const s3Client = new S3Client({ region: process.env.AWS_REGION });
 
@@ -18,19 +19,21 @@ export const importProductFile = async (
   const params = {
     Bucket: process.env.BUCKET_NAME!,
     Key: `uploaded/${fileName}`,
+    ContentType: "text/csv",
   };
 
   try {
     const command = new PutObjectCommand(params);
-    const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 60 });
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ url: signedUrl }),
-    };
+    const signedUrl = await getSignedUrl(s3Client, command, {
+      expiresIn: 3600,
+    });
+
+    return httpResponse(200, signedUrl);
   } catch (error) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ message: "Could not generate signed URL" }),
-    };
+    console.error("Could not generate signed URL:", error);
+    return httpResponse(500, {
+      message: "Could not generate signed URL",
+      error,
+    });
   }
 };
