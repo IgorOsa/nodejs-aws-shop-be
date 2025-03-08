@@ -1,12 +1,12 @@
-import { handler } from "../product-service/create-product";
+import { handler } from "../../product-service/create-product";
 import {
   DynamoDBClient,
   TransactWriteItemsCommand,
 } from "@aws-sdk/client-dynamodb";
-import { httpResponse } from "./../product-service/common/http-responses";
+import { httpResponse } from "../../common/http-responses";
 
 jest.mock("@aws-sdk/client-dynamodb");
-jest.mock("./../product-service/common/http-responses");
+jest.mock("../../common/http-responses");
 
 const mockDynamoDbClient = DynamoDBClient as jest.MockedClass<
   typeof DynamoDBClient
@@ -25,6 +25,7 @@ describe("create-product handler", () => {
         "Access-Control-Allow-Headers": "Content-Type",
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
+        "Access-Control-Allow-Credentials": true,
       },
       body: JSON.stringify(body),
     }));

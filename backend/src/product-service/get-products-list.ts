@@ -1,5 +1,5 @@
 import { DynamoDBClient, ScanCommand } from "@aws-sdk/client-dynamodb";
-import { httpResponse } from "./common/http-responses";
+import { httpResponse } from "../common/http-responses";
 
 const dynamoDbClient = new DynamoDBClient({});
 const PRODUCTS_TABLE_NAME = process.env.PRODUCTS_TABLE_NAME;
