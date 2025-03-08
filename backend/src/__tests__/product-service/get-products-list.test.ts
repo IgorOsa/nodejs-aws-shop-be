@@ -1,9 +1,9 @@
 import { DynamoDBClient, ScanCommand } from "@aws-sdk/client-dynamodb";
-import { handler } from "./../product-service/get-products-list";
-import { httpResponse } from "./../product-service/common/http-responses";
+import { handler } from "../../product-service/get-products-list";
+import { httpResponse } from "../../common/http-responses";
 
 jest.mock("@aws-sdk/client-dynamodb");
-jest.mock("./../product-service/common/http-responses");
+jest.mock("../../common/http-responses");
 
 const mockSend = jest.fn();
 DynamoDBClient.prototype.send = mockSend;
