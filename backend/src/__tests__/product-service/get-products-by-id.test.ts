@@ -1,7 +1,7 @@
-import { handler } from "../product-service/get-products-by-id";
+import { handler } from "../../product-service/get-products-by-id";
 import { DynamoDBClient, GetItemCommand } from "@aws-sdk/client-dynamodb";
 import { mockClient } from "aws-sdk-client-mock";
-import { httpResponse } from "../product-service/common/http-responses";
+import { httpResponse } from "../../common/http-responses";
 
 const dynamoDbMock = mockClient(DynamoDBClient);
 

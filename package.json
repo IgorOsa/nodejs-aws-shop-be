@@ -8,7 +8,7 @@
     "start:fe": "cd frontend && npm run start",
     "build:be": "cd backend && npm run build",
     "deploy:fe": "npm run build:fe && cd iac && cdk deploy RsNodeAwsShopStack --require-approval never --profile awscdk",
-    "deploy:be": "npm run build:be && cd iac && cdk deploy ProductServiceStack --require-approval never --profile awscdk"
+    "deploy:be": "npm run build:be && cd iac && cdk deploy ProductServiceStack ImportServiceStack --require-approval never --profile awscdk"
   },
   "keywords": [],
   "author": "",
