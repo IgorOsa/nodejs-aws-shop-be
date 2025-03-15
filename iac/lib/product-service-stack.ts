@@ -72,6 +72,28 @@ export class ProductServiceStack extends cdk.Stack {
       }
     );
 
+    const catalogItemsQueue = new sqs.Queue(this, "CatalogItemsQueue", {
+      visibilityTimeout: cdk.Duration.seconds(30),
+      receiveMessageWaitTime: cdk.Duration.seconds(20),
+    });
+
+    const catalogBatchProcessLambda = new lambda.Function(
+      this,
+      "CatalogBatchProcessLambda",
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: "index.catalogBatchProcess",
+        code: lambda.Code.fromAsset("../backend/dist"),
+        environment: {
+          PRODUCTS_TABLE: productsTable.tableName,
+          STOCKS_TABLE_NAME: stocksTable.tableName,
+        },
+        layers: [lambdaLayer],
+      }
+    );
+
+    productsTable.grantWriteData(catalogBatchProcessLambda);
+
     productsTable.grantReadData(getProductsListLambda);
     productsTable.grantReadData(getProductsByIdLambda);
     stocksTable.grantReadData(getProductsListLambda);
