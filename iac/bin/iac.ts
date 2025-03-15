@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 import * as cdk from "aws-cdk-lib";
+import * as dotenv from "dotenv";
 import { RsNodeAwsShop } from "../lib/fe-iac-stack";
 import { ProductServiceStack } from "../lib/product-service-stack";
 import { ImportServiceStack } from "../lib/import-service-stack";
+
+dotenv.config();
 
 const app = new cdk.App();
 new RsNodeAwsShop(app, "RsNodeAwsShopStack", {
