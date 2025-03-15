@@ -6,6 +6,7 @@ import * as sqs from "aws-cdk-lib/aws-sqs";
 import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
 import { Construct } from "constructs";
 import { addCorsOptions } from "./common";
+import { CATALOG_ITEMS_QUEUE_NAME } from "./common/constants";
 
 export class ProductServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -75,6 +76,7 @@ export class ProductServiceStack extends cdk.Stack {
     );
 
     const catalogItemsQueue = new sqs.Queue(this, "CatalogItemsQueue", {
+      queueName: CATALOG_ITEMS_QUEUE_NAME,
       visibilityTimeout: cdk.Duration.seconds(30),
       receiveMessageWaitTime: cdk.Duration.seconds(20),
     });
@@ -87,7 +89,7 @@ export class ProductServiceStack extends cdk.Stack {
         handler: "index.catalogBatchProcess",
         code: lambda.Code.fromAsset("../backend/dist"),
         environment: {
-          PRODUCTS_TABLE: productsTable.tableName,
+          PRODUCTS_TABLE_NAME: productsTable.tableName,
           STOCKS_TABLE_NAME: stocksTable.tableName,
         },
         layers: [lambdaLayer],
@@ -101,6 +103,7 @@ export class ProductServiceStack extends cdk.Stack {
     );
 
     productsTable.grantWriteData(catalogBatchProcessLambda);
+    stocksTable.grantWriteData(catalogBatchProcessLambda);
 
     productsTable.grantReadData(getProductsListLambda);
     productsTable.grantReadData(getProductsByIdLambda);

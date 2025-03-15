@@ -6,9 +6,10 @@ import { randomUUID } from "crypto";
 import { validateProductData } from "./common/validators";
 import { SQSEvent } from "aws-lambda";
 
-const dynamoDbClient = new DynamoDBClient({});
 const PRODUCTS_TABLE_NAME = process.env.PRODUCTS_TABLE_NAME;
 const STOCKS_TABLE_NAME = process.env.STOCKS_TABLE_NAME;
+
+const dynamoDbClient = new DynamoDBClient({});
 
 export const catalogBatchProcess = async (event: SQSEvent) => {
   if (!PRODUCTS_TABLE_NAME || !STOCKS_TABLE_NAME) {
