@@ -13,7 +13,8 @@ import { CATALOG_ITEMS_QUEUE_NAME } from "./common/constants";
 
 dotenv.config();
 
-const emailToSubscribe = process.env.EMAIL_1;
+const emailToSubscribe = process.env.EMAIL_HIGH_STOCK;
+const emailToSubscribeLowStock = process.env.EMAIL_LOW_STOCK;
 
 export class ProductServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -93,7 +94,24 @@ export class ProductServiceStack extends cdk.Stack {
     });
     emailToSubscribe &&
       createProductTopic.addSubscription(
-        new subscriptions.EmailSubscription(emailToSubscribe, {})
+        new subscriptions.EmailSubscription(emailToSubscribe, {
+          filterPolicyWithMessageBody: {
+            count: sns.FilterOrPolicy.filter(
+              sns.SubscriptionFilter.numericFilter({ greaterThanOrEqualTo: 5 })
+            ),
+          },
+        })
+      );
+
+    emailToSubscribeLowStock &&
+      createProductTopic.addSubscription(
+        new subscriptions.EmailSubscription(emailToSubscribeLowStock, {
+          filterPolicyWithMessageBody: {
+            count: sns.FilterOrPolicy.filter(
+              sns.SubscriptionFilter.numericFilter({ lessThan: 5 })
+            ),
+          },
+        })
       );
 
     const catalogBatchProcessLambda = new lambda.Function(
@@ -115,7 +133,6 @@ export class ProductServiceStack extends cdk.Stack {
     catalogBatchProcessLambda.addEventSource(
       new lambdaEventSources.SqsEventSource(catalogItemsQueue, {
         batchSize: 5,
-        maxBatchingWindow: cdk.Duration.seconds(30),
       })
     );
 

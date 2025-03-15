@@ -37,7 +37,7 @@ export const catalogBatchProcess = async (event: SQSEvent) => {
       );
       if (validationErrors) {
         console.error("Validation errors:", validationErrors);
-        continue; // Skip invalid records
+        continue;
       }
 
       const id = randomUUID();
@@ -76,15 +76,19 @@ export const catalogBatchProcess = async (event: SQSEvent) => {
       );
     }
 
-    if (createdProducts.length > 0) {
-      const result = await snsClient.send(
+    for (const product of createdProducts) {
+      await snsClient.send(
         new PublishCommand({
           TopicArn: CREATE_PRODUCT_TOPIC_ARN,
-          Subject: "New Products Created",
-          Message: JSON.stringify(createdProducts),
+          Subject: "New Product Created",
+          Message: JSON.stringify({
+            message: `${product.title}`,
+            product,
+            count: Number(product.count),
+          }),
         })
       );
-      console.log("Message sent to sns topic", { result });
+      console.log("New Product Created", { product });
     }
 
     return console.log("Batch process completed successfully");
