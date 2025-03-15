@@ -4,7 +4,7 @@ import {
 } from "@aws-sdk/client-dynamodb";
 import { randomUUID } from "crypto";
 import { httpResponse } from "../common/http-responses";
-import { validateProductData } from "./common/validators";
+import { validateProductData } from "../common/validators";
 
 const dynamoDbClient = new DynamoDBClient({});
 const PRODUCTS_TABLE_NAME = process.env.PRODUCTS_TABLE_NAME;

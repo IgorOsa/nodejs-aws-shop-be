@@ -4,7 +4,7 @@ import {
 } from "@aws-sdk/client-dynamodb";
 import { SNSClient, PublishCommand } from "@aws-sdk/client-sns";
 import { randomUUID } from "crypto";
-import { validateProductData } from "./common/validators";
+import { validateProductData } from "../common/validators";
 import { SQSEvent } from "aws-lambda";
 
 const PRODUCTS_TABLE_NAME = process.env.PRODUCTS_TABLE_NAME;
@@ -15,11 +15,6 @@ const dynamoDbClient = new DynamoDBClient({});
 const snsClient = new SNSClient({});
 
 export const catalogBatchProcess = async (event: SQSEvent) => {
-  if (!PRODUCTS_TABLE_NAME || !STOCKS_TABLE_NAME || !CREATE_PRODUCT_TOPIC_ARN) {
-    console.error(`Env variables is not set properly`);
-    return;
-  }
-
   console.log("Incoming event:", event);
 
   try {
