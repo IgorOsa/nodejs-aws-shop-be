@@ -2,8 +2,19 @@ import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
+import * as sqs from "aws-cdk-lib/aws-sqs";
+import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
+import * as sns from "aws-cdk-lib/aws-sns";
+import * as subscriptions from "aws-cdk-lib/aws-sns-subscriptions";
 import { Construct } from "constructs";
+import * as dotenv from "dotenv";
 import { addCorsOptions } from "./common";
+import { CATALOG_ITEMS_QUEUE_NAME } from "./common/constants";
+
+dotenv.config();
+
+const emailToSubscribe = process.env.EMAIL_HIGH_STOCK;
+const emailToSubscribeLowStock = process.env.EMAIL_LOW_STOCK;
 
 export class ProductServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -72,6 +83,62 @@ export class ProductServiceStack extends cdk.Stack {
       }
     );
 
+    const catalogItemsQueue = new sqs.Queue(this, "CatalogItemsQueue", {
+      queueName: CATALOG_ITEMS_QUEUE_NAME,
+      visibilityTimeout: cdk.Duration.seconds(30),
+      receiveMessageWaitTime: cdk.Duration.seconds(20),
+    });
+
+    const createProductTopic = new sns.Topic(this, "CreateProductTopic", {
+      displayName: "Create Product Topic",
+    });
+    emailToSubscribe &&
+      createProductTopic.addSubscription(
+        new subscriptions.EmailSubscription(emailToSubscribe, {
+          filterPolicyWithMessageBody: {
+            count: sns.FilterOrPolicy.filter(
+              sns.SubscriptionFilter.numericFilter({ greaterThanOrEqualTo: 5 })
+            ),
+          },
+        })
+      );
+
+    emailToSubscribeLowStock &&
+      createProductTopic.addSubscription(
+        new subscriptions.EmailSubscription(emailToSubscribeLowStock, {
+          filterPolicyWithMessageBody: {
+            count: sns.FilterOrPolicy.filter(
+              sns.SubscriptionFilter.numericFilter({ lessThan: 5 })
+            ),
+          },
+        })
+      );
+
+    const catalogBatchProcessLambda = new lambda.Function(
+      this,
+      "CatalogBatchProcessLambda",
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: "index.catalogBatchProcess",
+        code: lambda.Code.fromAsset("../backend/dist"),
+        environment: {
+          PRODUCTS_TABLE_NAME: productsTable.tableName,
+          STOCKS_TABLE_NAME: stocksTable.tableName,
+          CREATE_PRODUCT_TOPIC_ARN: createProductTopic.topicArn,
+        },
+        layers: [lambdaLayer],
+      }
+    );
+
+    catalogBatchProcessLambda.addEventSource(
+      new lambdaEventSources.SqsEventSource(catalogItemsQueue, {
+        batchSize: 5,
+      })
+    );
+
+    productsTable.grantWriteData(catalogBatchProcessLambda);
+    stocksTable.grantWriteData(catalogBatchProcessLambda);
+
     productsTable.grantReadData(getProductsListLambda);
     productsTable.grantReadData(getProductsByIdLambda);
     stocksTable.grantReadData(getProductsListLambda);
@@ -84,6 +151,13 @@ export class ProductServiceStack extends cdk.Stack {
 
     productsTable.grantReadWriteData(createProductLambda);
     stocksTable.grantReadWriteData(createProductLambda);
+
+    createProductTopic.grantPublish(catalogBatchProcessLambda);
+
+    catalogBatchProcessLambda.addEnvironment(
+      "CREATE_PRODUCT_TOPIC_ARN",
+      createProductTopic.topicArn
+    );
 
     const api = new apigateway.RestApi(this, "ProductServiceApi", {
       restApiName: "Product Service API",

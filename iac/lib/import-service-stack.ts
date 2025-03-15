@@ -5,6 +5,7 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as s3n from "aws-cdk-lib/aws-s3-notifications";
 import * as iam from "aws-cdk-lib/aws-iam";
+import { CATALOG_ITEMS_QUEUE_NAME } from "./common/constants";
 
 export class ImportServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -64,6 +65,7 @@ export class ImportServiceStack extends cdk.Stack {
         code: lambda.Code.fromAsset("../backend/dist"),
         environment: {
           BUCKET_NAME: bucket.bucketName,
+          SQS_QUEUE_URL: `https://sqs.${this.region}.amazonaws.com/${this.account}/${CATALOG_ITEMS_QUEUE_NAME}`,
         },
         layers: [lambdaLayer],
       }
@@ -78,8 +80,12 @@ export class ImportServiceStack extends cdk.Stack {
           "s3:PutObject",
           "s3:DeleteObject",
           "s3:CopyObject",
+          "sqs:SendMessage", // Added permission to send messages to SQS
         ],
-        resources: [bucket.bucketArn + "/*"],
+        resources: [
+          bucket.bucketArn + "/*",
+          `arn:aws:sqs:${this.region}:${this.account}:${CATALOG_ITEMS_QUEUE_NAME}`,
+        ],
       })
     );
 
