@@ -2,6 +2,8 @@ import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
+import * as sqs from "aws-cdk-lib/aws-sqs";
+import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
 import { Construct } from "constructs";
 import { addCorsOptions } from "./common";
 
@@ -90,6 +92,12 @@ export class ProductServiceStack extends cdk.Stack {
         },
         layers: [lambdaLayer],
       }
+    );
+
+    catalogBatchProcessLambda.addEventSource(
+      new lambdaEventSources.SqsEventSource(catalogItemsQueue, {
+        batchSize: 5,
+      })
     );
 
     productsTable.grantWriteData(catalogBatchProcessLambda);
