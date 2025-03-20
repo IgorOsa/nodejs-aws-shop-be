@@ -4,13 +4,15 @@ import { SdkStreamMixin } from "@aws-sdk/types";
 import { mockClient } from "aws-sdk-client-mock";
 import { S3Event } from "aws-lambda";
 import { importFileParser } from "./../../import-service/importFileParser";
+import { SQSClient } from "@aws-sdk/client-sqs";
 
-// Mock the S3Client
 const s3Mock = mockClient(S3Client);
+const sqsMock = mockClient(SQSClient);
 
 describe("importFileParser", () => {
   beforeEach(() => {
     s3Mock.reset();
+    sqsMock.reset();
   });
 
   it("should process a CSV file and log records", async () => {
@@ -43,15 +45,18 @@ describe("importFileParser", () => {
     await new Promise((resolve) => setImmediate(resolve));
 
     // Assertions
-    expect(consoleLogSpy).toHaveBeenCalledWith("Record:", {
-      id: "1",
-      title: "Title",
-      description: "Example description",
-      price: "10",
-      count: "2",
+    expect(consoleLogSpy).toHaveBeenCalledWith("Message sent to queue", {
+      sqsParams: {
+        MessageBody:
+          '{"title":"Title","description":"Example description","price":10,"count":2}',
+        QueueUrl: undefined,
+      },
     });
     expect(consoleLogSpy).toHaveBeenCalledWith(
       "CSV file successfully processed"
+    );
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      "File moved from to /parsed folder"
     );
 
     // Restore console.log

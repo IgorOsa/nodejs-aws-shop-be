@@ -5,10 +5,13 @@ import {
   CopyObjectCommand,
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
+import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 import { Readable } from "stream";
 import * as csv from "csv-parser";
 
 const s3Client = new S3Client({ region: process.env.AWS_REGION });
+const sqsClient = new SQSClient({ region: process.env.AWS_REGION });
+const queueUrl = process.env.SQS_QUEUE_URL;
 
 export const importFileParser: S3Handler = async (event) => {
   const bucket = event.Records[0].s3.bucket.name;
@@ -27,8 +30,24 @@ export const importFileParser: S3Handler = async (event) => {
     await new Promise((resolve, reject) => {
       s3Stream
         .pipe(csv())
-        .on("data", (data) => {
-          console.log("Record:", data);
+        .on("data", async (data) => {
+          try {
+            s3Stream.pause();
+            const sqsParams = {
+              QueueUrl: queueUrl,
+              MessageBody: JSON.stringify({
+                title: data.title,
+                description: data.description,
+                price: Number(data.price),
+                count: Number(data.count),
+              }),
+            };
+            await sqsClient.send(new SendMessageCommand(sqsParams));
+            console.log(`Message sent to queue`, { sqsParams });
+            s3Stream.resume();
+          } catch (error) {
+            console.error("Error sending message to SQS:", error);
+          }
         })
         .on("end", () => {
           resolve("CSV file successfully processed");
