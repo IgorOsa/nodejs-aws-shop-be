@@ -1,6 +1,7 @@
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import { BASIC_AUTHORIZER_LAMBDA_NAME } from "./common/constants";
 
 export class AuthorizationServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -17,6 +18,7 @@ export class AuthorizationServiceStack extends cdk.Stack {
     );
 
     const basicAuthorizer = new lambda.Function(this, "BasicAuthorizer", {
+      functionName: BASIC_AUTHORIZER_LAMBDA_NAME,
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: "basicAuthorizer.basicAuthorizer",
       code: lambda.Code.fromAsset("../backend/dist/authorization-service"),

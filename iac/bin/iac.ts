@@ -35,14 +35,14 @@ new ProductServiceStack(app, "ProductServiceStack", {
   },
 });
 
-new ImportServiceStack(app, "ImportServiceStack", {
+new AuthorizationServiceStack(app, "AuthorizationServiceStack", {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION,
   },
 });
 
-new AuthorizationServiceStack(app, "AuthorizationServiceStack", {
+new ImportServiceStack(app, "ImportServiceStack", {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION,
