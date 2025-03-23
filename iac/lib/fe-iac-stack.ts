@@ -24,8 +24,8 @@ export class RsNodeAwsShop extends cdk.Stack {
       "WebsiteDistribution",
       {
         defaultBehavior: {
-          origin:
-            origins.S3BucketOrigin.withOriginAccessIdentity(websiteBucket),
+          origin: origins.S3BucketOrigin.withOriginAccessControl(websiteBucket),
+          allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
           viewerProtocolPolicy:
             cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         },

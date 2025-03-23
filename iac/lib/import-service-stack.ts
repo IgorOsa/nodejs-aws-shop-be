@@ -9,7 +9,6 @@ import {
   BASIC_AUTHORIZER_LAMBDA_NAME,
   CATALOG_ITEMS_QUEUE_NAME,
 } from "./common/constants";
-import { AuthorizationServiceStack } from "./authorization-service-stack";
 
 export class ImportServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -136,5 +135,31 @@ export class ImportServiceStack extends cdk.Stack {
         authorizationType: apigateway.AuthorizationType.CUSTOM,
       }
     );
+
+    api.addGatewayResponse("Unauthorized", {
+      type: apigateway.ResponseType.UNAUTHORIZED,
+      statusCode: "401",
+      responseHeaders: {
+        "Access-Control-Allow-Origin": "'*'",
+        "Access-Control-Allow-Headers": "'Content-Type,Authorization'",
+        "Content-Type": "'application/json'",
+      },
+      templates: {
+        "application/json": '{"message": "Unauthorized"}',
+      },
+    });
+
+    api.addGatewayResponse("Forbidden", {
+      type: apigateway.ResponseType.ACCESS_DENIED,
+      statusCode: "403",
+      responseHeaders: {
+        "Access-Control-Allow-Origin": "'*'",
+        "Access-Control-Allow-Headers": "'Content-Type,Authorization'",
+        "Content-Type": "'application/json'",
+      },
+      templates: {
+        "application/json": '{"message": "Forbidden"}',
+      },
+    });
   }
 }
