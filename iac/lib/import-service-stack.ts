@@ -5,7 +5,10 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as s3n from "aws-cdk-lib/aws-s3-notifications";
 import * as iam from "aws-cdk-lib/aws-iam";
-import { CATALOG_ITEMS_QUEUE_NAME } from "./common/constants";
+import {
+  BASIC_AUTHORIZER_LAMBDA_NAME,
+  CATALOG_ITEMS_QUEUE_NAME,
+} from "./common/constants";
 
 export class ImportServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -107,6 +110,16 @@ export class ImportServiceStack extends cdk.Stack {
       },
     });
 
+    const basicAuthorizer = lambda.Function.fromFunctionArn(
+      this,
+      "BasicAuthorizer",
+      `arn:aws:lambda:${this.region}:${this.account}:function:${BASIC_AUTHORIZER_LAMBDA_NAME}`
+    );
+
+    const authorizer = new apigateway.TokenAuthorizer(this, "Authorizer", {
+      handler: basicAuthorizer,
+    });
+
     const importResource = api.root.addResource("import");
     importResource.addMethod(
       "GET",
@@ -118,7 +131,35 @@ export class ImportServiceStack extends cdk.Stack {
         requestValidatorOptions: {
           validateRequestParameters: true,
         },
+        authorizer,
+        authorizationType: apigateway.AuthorizationType.CUSTOM,
       }
     );
+
+    api.addGatewayResponse("Unauthorized", {
+      type: apigateway.ResponseType.UNAUTHORIZED,
+      statusCode: "401",
+      responseHeaders: {
+        "Access-Control-Allow-Origin": "'*'",
+        "Access-Control-Allow-Headers": "'Content-Type,Authorization'",
+        "Content-Type": "'application/json'",
+      },
+      templates: {
+        "application/json": '{"message": "Unauthorized"}',
+      },
+    });
+
+    api.addGatewayResponse("Forbidden", {
+      type: apigateway.ResponseType.ACCESS_DENIED,
+      statusCode: "403",
+      responseHeaders: {
+        "Access-Control-Allow-Origin": "'*'",
+        "Access-Control-Allow-Headers": "'Content-Type,Authorization'",
+        "Content-Type": "'application/json'",
+      },
+      templates: {
+        "application/json": '{"message": "Forbidden"}',
+      },
+    });
   }
 }
