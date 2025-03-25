@@ -17,6 +17,10 @@ export const basicAuthorizer = async (
   }
 
   const token = event.authorizationToken.split(" ")[1];
+  if (!token) {
+    return generatePolicy("Deny", "user", event.methodArn);
+  }
+
   const decodedToken = Buffer.from(token, "base64").toString("utf-8");
   const [username, password] = decodedToken.split(":");
 
