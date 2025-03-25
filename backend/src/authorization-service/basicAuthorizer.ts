@@ -21,13 +21,17 @@ export const basicAuthorizer = async (
     return generatePolicy("Deny", "user", event.methodArn);
   }
 
-  const decodedToken = Buffer.from(token, "base64").toString("utf-8");
-  const [username, password] = decodedToken.split(":");
+  try {
+    const decodedToken = Buffer.from(token, "base64").toString("utf-8");
+    const [username, password] = decodedToken.split(":");
 
-  const storedPassword = process.env[username];
+    const storedPassword = process.env[username];
 
-  if (storedPassword && storedPassword === password) {
-    return generatePolicy("Allow", username, event.methodArn);
+    if (storedPassword && storedPassword === password) {
+      return generatePolicy("Allow", username, event.methodArn);
+    }
+  } catch (err) {
+    console.error(err);
   }
 
   return generatePolicy("Deny", "user", event.methodArn);
