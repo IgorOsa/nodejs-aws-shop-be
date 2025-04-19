@@ -10,7 +10,7 @@ export class BffServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const beanstalkUrl = "http://igorosa-bff-api-develop.eu-central-1.elasticbeanstalk.com";
+    const beanstalkUrl = process.env.API_BFF_PATH;
 
     const httpApi = new apigwv2.HttpApi(this, "BffServiceHttpApi", {
       apiName: "BFF Service HTTP API",
