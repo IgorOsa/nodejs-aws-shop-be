@@ -1,8 +1,11 @@
 const http = require('http');
-const dotenv = require('dotenv');
 const path = require('path');
 
-dotenv.config({ path: path.resolve(__dirname, '..', '..', '.env') });
+if (['local'].includes(process.env.NODE_ENV)) {
+  const dotenv = require('dotenv');
+  
+  dotenv.config({ path: path.resolve(__dirname, '..', '..', '.env') });
+}
 
 const PORT = process.env.PORT || 3000;
 
