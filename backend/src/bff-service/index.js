@@ -1,6 +1,16 @@
 const http = require('http');
 const path = require('path');
 
+// Simple in-memory cache for getProductsList
+const cache = {
+  productsList: {
+    data: null,
+    expiresAt: 0
+  }
+};
+// Cache duration: 2 minutes
+const CACHE_DURATION_MS = 2 * 60 * 1000;
+
 if (['local'].includes(process.env.NODE_ENV)) {
   const dotenv = require('dotenv');
   
@@ -16,8 +26,20 @@ function getRecipientUrl(serviceName) {
 }
 
 const server = http.createServer((req, res) => {
-  // Extract service name from URL: /{recipient-service-name}?
+  // Parse URL parts once for all logic
   const urlParts = req.url.split('?')[0].split('/').filter(Boolean);
+  const isGetProductsList = req.method === 'GET' && urlParts[0] === 'product'
+
+  if (isGetProductsList) {
+    const now = Date.now();
+    if (cache.productsList.data && cache.productsList.expiresAt > now) {
+      // Serve from cache
+      res.writeHead(200, { 'Content-Type': 'application/json', 'X-Cache': 'HIT' });
+      res.end(cache.productsList.data);
+      return;
+    }
+  }
+  // Extract service name from URL: /{recipient-service-name}?
   const serviceName = urlParts[0];
   if (!serviceName) {
     res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -54,6 +76,12 @@ const server = http.createServer((req, res) => {
         redirect: 'manual',
       };
       const response = await fetch(targetUrl, fetchOptions);
+      // If this is a GET /product request, cache the response
+      if (isGetProductsList && response.status === 200) {
+        const responseBody = await response.clone().text();
+        cache.productsList.data = responseBody;
+        cache.productsList.expiresAt = Date.now() + CACHE_DURATION_MS;
+      }
       // Forward status and headers
       res.writeHead(response.status, Object.fromEntries(response.headers.entries()));
       // Stream the response body for native fetch (ReadableStream)
