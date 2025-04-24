@@ -5,6 +5,7 @@ import { RsNodeAwsShop } from "../lib/fe-iac-stack";
 import { ProductServiceStack } from "../lib/product-service-stack";
 import { ImportServiceStack } from "../lib/import-service-stack";
 import { AuthorizationServiceStack } from "../lib/authorization-service-stack";
+import { BffServiceStack } from "../lib/bff-service-stack";
 
 dotenv.config();
 
@@ -43,6 +44,13 @@ new AuthorizationServiceStack(app, "AuthorizationServiceStack", {
 });
 
 new ImportServiceStack(app, "ImportServiceStack", {
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEFAULT_REGION,
+  },
+});
+
+new BffServiceStack(app, "BffServiceStack", {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION,
